@@ -12,7 +12,7 @@ export default function JobSubmit() {
     const apiBase = apiBaseRaw ? apiBaseRaw.replace(/\/+$/, "") : "";
 
     const validate = (value) => {
-        if (!value || value.trim().length === 0) return "Enter Guithub URL";
+        if (!value || value.trim().length === 0) return "Enter Github URL";
         if (!GITHUB_REPO_REGEX.test(value.trim()))
             return "Enter by the following format: https://github.com/owner/repo";
         return "";
