@@ -1,3 +1,5 @@
+cd backend
+
 rm -rf build && mkdir -p build
 
 docker run --rm \
