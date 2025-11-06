@@ -1,12 +1,9 @@
-import os, json, uuid, pathlib
 from datetime import datetime, timezone
-import logging
-
-import boto3
 from botocore.stub import Stubber, ANY
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, AnyUrl
 from mangum import Mangum
+import boto3, json, logging, os, pathlib, uuid
 
 # Load .env on local run
 try:
@@ -18,24 +15,24 @@ except Exception:
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 
-REGION = os.getenv("AWS_REGION", "ap-southeast-2")
-BUCKET = os.environ.get("BUCKET_NAME", "dev-agents-bff-state")
-STATE_MACHINE_ARN = os.environ.get("STATE_MACHINE_ARN", "")
-LOCAL = os.getenv("LOCAL_AWS", "").lower() in ("1", "true", "yes", "stub")
+AWS_REGION = os.getenv("AWS_REGION", "ap-southeast-2")
+BUCKET_NAME = os.getenv("BUCKET_NAME", "dev-agents-bff-state")
+STATE_MACHINE_ARN = os.getenv("STATE_MACHINE_ARN", "")
+LOCAL_AWS = os.getenv("LOCAL_AWS", "").lower() in ("1", "true", "yes", "stub")
 
 # Create clients
-s3 = boto3.client("s3", region_name=REGION)
-sfn = boto3.client("stepfunctions", region_name=REGION)
+s3 = boto3.client("s3", region_name=AWS_REGION)
+sfn = boto3.client("stepfunctions", region_name=AWS_REGION)
 
 # When LOCAL, stub out AWS calls so we can run without real AWS
-if LOCAL:
+if LOCAL_AWS:
     s3_stubber = Stubber(s3)
     sfn_stubber = Stubber(sfn)
 
     # Accept any put_object to .../jobs/<uuid>/state.json
     s3_stubber.add_response(
         "put_object",
-        expected_params={"Bucket": BUCKET, "Key": ANY, "Body": ANY, "ContentType": "application/json"},
+        expected_params={"Bucket": BUCKET_NAME, "Key": ANY, "Body": ANY, "ContentType": "application/json"},
         service_response={},  # empty success
     )
     s3_stubber.activate()
@@ -48,7 +45,7 @@ if LOCAL:
     )
     sfn_stubber.activate()
 
-app = FastAPI(title="Dev Agents BFF (local-friendly)")
+app = FastAPI(title="Dev Agents BFF")
 
 class JobCreate(BaseModel):
     repo_url: AnyUrl
@@ -73,15 +70,15 @@ def create_job(payload: JobCreate):
     try:
         # Real (or stubbed) AWS call
         s3.put_object(
-            Bucket=BUCKET,
+            Bucket=BUCKET_NAME,
             Key=key,
             Body=json.dumps(state, separators=(",", ":"), ensure_ascii=False).encode("utf-8"),
             ContentType="application/json",
         )
-        log.info({"event": "s3_put_object", "bucket": BUCKET, "key": key, "job_id": job_id})
+        log.info({"event": "s3_put_object", "bucket": BUCKET_NAME, "key": key, "job_id": job_id})
 
         # Optional: on LOCAL also write a visible local copy for easy inspection
-        if LOCAL:
+        if LOCAL_AWS:
             local_copy = pathlib.Path("_local_s3") / key
             local_copy.parent.mkdir(parents=True, exist_ok=True)
             local_copy.write_text(json.dumps(state, indent=2), encoding="utf-8")

@@ -6,7 +6,7 @@ docker run --rm \
   public.ecr.aws/lambda/python:3.12-arm64 \
   -c "python -m pip install -r /var/task/requirements.txt -t /var/task/build"
 
-  cp app.py build/
+cp app.py build/
 
 (
   cd build && \
