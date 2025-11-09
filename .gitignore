@@ -1,9 +1,8 @@
 __pycache__/
 _local_s3/
-build/
-lambda.zip
+artefacts/
+dist/
 node_modules/
 .env
-.python-version
 .venv
 .vscode
