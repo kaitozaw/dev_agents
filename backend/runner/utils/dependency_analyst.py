@@ -1,9 +1,9 @@
-import ast, json, subprocess, shutil, tempfile
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Any, Dict, List, Set
+import ast, json, subprocess, shutil, tempfile
 
 # --- Public API ---
-def analyse_repo(repo_url: str, branch: str) -> dict:
+def analyse_repo(repo_url: str, branch: str) -> Dict[str, Any]:
     tmpdir = tempfile.mkdtemp(prefix="dep-analyst-")
     repo_root = Path(tmpdir) / "repo"
     try:

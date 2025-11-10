@@ -1,5 +1,5 @@
 import logging, sys, traceback
-from backend.runner.utils import job_io
+from backend.runner.utils import job_io, planner
 
 log = logging.getLogger()
 if not log.handlers:
@@ -10,7 +10,8 @@ log.setLevel(logging.INFO)
 
 def run(job_id: str, repo_url: str, branch: str):
     try:
-        print("plan")
+        payload = planner.plan_single_file(job_id)
+        job_io.update(job_id, "plan", payload)
         job_io.update(job_id, "job", {"stage": "implementer",})
     except Exception as e:
         err_msg = str(e)
