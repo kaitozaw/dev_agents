@@ -3,6 +3,7 @@ _local_s3/
 artefacts/
 dist/
 node_modules/
+.DS_store
 .env
 .venv
 .vscode
