@@ -33,6 +33,7 @@ def analyse_repo(repo_url: str, branch: str) -> Dict[str, Any]:
 class _ImportVisitor(ast.NodeVisitor):
     def __init__(self) -> None:
         self.imports: Dict[str, Set[str]] = {}
+        self.importfrom_details: Dict[str, List[tuple]] = {}
         self.used_names: Set[str] = set()
     def visit_Import(self, node: ast.Import) -> None:
         for alias in node.names:
@@ -45,8 +46,10 @@ class _ImportVisitor(ast.NodeVisitor):
         dots = "." * (node.level or 0)
         mod = f"{dots}{base}"
         for alias in node.names:
-            name = alias.asname or alias.name
-            self.imports.setdefault(mod, set()).add(name)
+            if alias.name != "*":
+                name = alias.asname or alias.name
+                self.imports.setdefault(mod, set()).add(name)
+            self.importfrom_details.setdefault(mod, []).append((alias.name, alias.asname))
         self.generic_visit(node)
     def visit_Name(self, node: ast.Name) -> None:
         self.used_names.add(node.id)
@@ -77,12 +80,36 @@ def _build_dependency_graph(repo_root: Path, py_files: List[Path]):
         tree = ast.parse(src, filename=str(p))
         v = _ImportVisitor()
         v.visit(tree)
+
         imports_map[mod] = {"used": v.used_names, "imports": {}}
         for key, names in v.imports.items():
-            imports_map[mod]["imports"][key] = set(names)
+            clean_names = {n for n in names if n != "*"}
+            if clean_names:
+                imports_map[mod]["imports"][key] = clean_names
+
+        for base, pairs in getattr(v, "importfrom_details", {}).items():
+            for orig_name, _asname in pairs:
+                if orig_name == "*":
+                    for t in _resolve_import_to_modules(base, mod, modules):
+                        if t and t != mod:
+                            graph[mod].add(t)
+                    continue
+                full = f"{base}.{orig_name}".strip(".")
+                resolved_any = False
+                for t in _resolve_import_to_modules(full, mod, modules):
+                    if t and t != mod:
+                        graph[mod].add(t)
+                        resolved_any = True
+                if not resolved_any:
+                    for t in _resolve_import_to_modules(base, mod, modules):
+                        if t and t != mod:
+                            graph[mod].add(t)
+
+        for key, _names in v.imports.items():
             for t in _resolve_import_to_modules(key, mod, modules):
                 if t and t != mod:
                     graph[mod].add(t)
+
     return graph, imports_map
 
 def _file_to_module(repo_root: Path, py_path: Path) -> str:
