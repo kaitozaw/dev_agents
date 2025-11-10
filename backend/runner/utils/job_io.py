@@ -1,11 +1,11 @@
 from backend.config import AWS_REGION, BUCKET_NAME, LOCAL_AWS, LOCAL_S3_ROOT
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 import boto3, json
 
 _s3 = boto3.client("s3", region_name=AWS_REGION)
 
-def load(job_id: str) -> Optional[Dict[str, Any]]:
-    key = f"jobs/{job_id}/job.json"
+def load(job_id: str, file_name: str) -> Optional[Dict[str, Any]]:
+    key = f"jobs/{job_id}/{file_name}.json"
     return read(key)
 
 def read(key: str) -> Optional[Dict[str, Any]]:
@@ -20,8 +20,8 @@ def read(key: str) -> Optional[Dict[str, Any]]:
     except _s3.exceptions.NoSuchKey:
         return None
 
-def update(job_id: str, patch: Dict[str, Any]) -> None:
-    key = f"jobs/{job_id}/job.json"
+def update(job_id: str, file_name: str, patch: Dict[str, Any]) -> None:
+    key = f"jobs/{job_id}/{file_name}.json"
     job = read(key) or {}
     job.update(patch)
     write(key, job)

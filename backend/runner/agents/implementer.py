@@ -11,8 +11,8 @@ log.setLevel(logging.INFO)
 def run(job_id: str, repo_url: str, branch: str):
     try:
         print("implement")
-        job_io.update(job_id, {"stage": "reviewer",})
+        job_io.update(job_id, "job", {"stage": "reviewer",})
     except Exception as e:
         err_msg = str(e)
-        job_io.update(job_id, { "status": "failed",})
+        job_io.update(job_id, "job", { "status": "failed",})
         log.error({"event": "agent_stage_failed", "job_id": job_id, "stage": "implementer", "error": err_msg, "traceback": traceback.format_exc(),})

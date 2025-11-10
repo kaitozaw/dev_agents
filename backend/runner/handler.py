@@ -25,7 +25,7 @@ def handler(event: Dict[str, Any], context: Any):
         return {"ok": False, "error": "missing job_id"}
 
     # --- Step 2: Load job ---
-    job = job_io.load(job_id)
+    job = job_io.load(job_id, "job")
     if not job:
         log.error({"event": "runner_job_not_found", "job_id": job_id, "error": "job not found",})
         return {"ok": False, "error": "job not found"}
@@ -37,17 +37,17 @@ def handler(event: Dict[str, Any], context: Any):
 
     # --- Step 3: Validate job ---
     if not repo_url:
-        job_io.update(job_id, {"status": "failed",})
+        job_io.update(job_id,  "job", {"status": "failed",})
         log.error({"event": "runner_stage_failed", "job_id": job_id, "stage": stage, "error": "repo_url is missing in job",})
         return {"ok": False, "error": "repo_url is missing in job"}
 
     if status not in ALLOWED_STATUSES:
-        job_io.update(job_id, {"status": "failed",})
+        job_io.update(job_id, "job", {"status": "failed",})
         log.error({"event": "runner_stage_failed", "job_id": job_id, "stage": stage, "error": f"Unknown status '{status}'",})
         return {"ok": False, "error": f"Unknown status '{status}'"}
 
     if stage not in ALLOWED_STAGES:
-        job_io.update(job_id, {"status": "failed",})
+        job_io.update(job_id, "job", {"status": "failed",})
         log.error({"event": "runner_stage_failed", "job_id": job_id, "stage": stage, "error": f"Unknown stage '{stage}'",})
         return {"ok": False, "error": f"Unknown stage '{stage}'"}
 
@@ -58,7 +58,7 @@ def handler(event: Dict[str, Any], context: Any):
     # --- Step 5: Promote to running if currently accepted ---
     if status == "accepted":
         status = "running"
-        job_io.update(job_id, {"status": status,})
+        job_io.update(job_id, "job", {"status": status,})
         
     # --- Step 6: Dispatch exactly one stage ---
     try:
@@ -78,12 +78,12 @@ def handler(event: Dict[str, Any], context: Any):
         log.info({"event": "runner_stage_completed", "job_id": job_id, "status": status, "stage": stage,})
     except Exception as e:
         err_msg = str(e)
-        job_io.update(job_id, {"status": "failed",})
+        job_io.update(job_id, "job", {"status": "failed",})
         log.error({"event": "runner_stage_failed", "job_id": job_id, "stage": stage, "error": err_msg,})
         return {"ok": False, "error": err_msg}
 
     # --- Step 7: Fire-and-forget self-reinvoke exactly once if the stage advanced ---
-    next_job = job_io.load(job_id) or {}
+    next_job = job_io.load(job_id, "job") or {}
     next_status = next_job.get("status")
     next_stage = next_job.get("stage")
 

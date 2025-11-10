@@ -1,5 +1,5 @@
 import logging, sys, traceback
-from backend.runner.utils import job_io
+from backend.runner.utils import job_io, dependency_analyst
 
 log = logging.getLogger()
 if not log.handlers:
@@ -10,9 +10,10 @@ log.setLevel(logging.INFO)
 
 def run(job_id: str, repo_url: str, branch: str):
     try:
-        print("dependency analysis")
-        job_io.update(job_id, {"stage": "planner",})
+        payload = dependency_analyst.analyse_repo(repo_url, branch)
+        job_io.update(job_id, "dependency", payload)
+        job_io.update(job_id, "job", {"stage": "planner",})
     except Exception as e:
         err_msg = str(e)
-        job_io.update(job_id, { "status": "failed",})
+        job_io.update(job_id, "job", { "status": "failed",})
         log.error({"event": "agent_stage_failed", "job_id": job_id, "stage": "dependency_analyst", "error": err_msg, "traceback": traceback.format_exc(),})
