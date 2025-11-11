@@ -1,5 +1,5 @@
 import logging, sys, traceback
-from backend.runner.utils import job_io
+from backend.runner.utils import job_io, implementer
 
 log = logging.getLogger()
 if not log.handlers:
@@ -10,7 +10,8 @@ log.setLevel(logging.INFO)
 
 def run(job_id: str, repo_url: str, branch: str):
     try:
-        print("implement")
+        payload = implementer.implement_diff(job_id, repo_url, branch)
+        job_io.update(job_id, "implement.diff", payload)
         job_io.update(job_id, "job", {"stage": "reviewer",})
     except Exception as e:
         err_msg = str(e)
