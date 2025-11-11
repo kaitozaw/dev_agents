@@ -2,7 +2,7 @@ from backend.runner.agents import dependency_analyst, planner, implementer, revi
 from backend.runner.utils import job_io
 from backend.config import LOCAL_AWS, AWS_REGION, AGENTS_ARN
 from typing import Any, Dict
-import boto3, json, logging, sys, threading
+import boto3, json, logging, sys, threading, zipimport
 
 # --- Logging ---
 log = logging.getLogger()

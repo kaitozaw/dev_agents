@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple
 from backend.runner.utils import job_io
 
 # --- Public API ---
@@ -8,8 +8,13 @@ def plan_single_file(job_id: str) -> Dict[str, Any]:
         raise ValueError("dependency.json is missing or not a JSON object")
 
     candidate, reason = _pick_candidate(deps)
+    unused_imports = list((deps.get("unused_imports") or {}).get(candidate, []))
+    if not unused_imports:
+        raise ValueError(f"No unused imports found for candidate module '{candidate}'")
+
     return {
         "candidate": candidate,
+        "unused_imports": unused_imports,
         "reason": reason,
     }
 
