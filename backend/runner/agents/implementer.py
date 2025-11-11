@@ -1,5 +1,5 @@
 import logging, sys, traceback
-from backend.runner.utils import job_io, implementer
+from backend.runner.utils import implementer, job_io
 
 log = logging.getLogger()
 if not log.handlers:

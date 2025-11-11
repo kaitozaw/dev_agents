@@ -28,7 +28,7 @@ PYTHONPATH=.. uvicorn backend.bff.app:app --reload --port 8000
 - Create an Amazon S3 bucket "dev-agents-bff".
 - Create an AWS Lambda function "dev-agents-bff" (Runtime: Python 3.12, Handler: backend.bff.app.handler, Architecture: arm64).
 - Create an AWS Lambda function "dev-agents-runner" (Runtime: Python 3.12, Handler: backend.runner.handler.handler, Architecture: arm64).
-- Add environment variables to both Lambdas: AGENTS_ARN (Lambda runner function ARN), BUCKET_NAME (S3 bucket name), and STAGE=prod.
+- Add environment variables to both Lambdas: AGENTS_ARN (Lambda runner function ARN), BUCKET_NAME (S3 bucket name), OPEN_API_KEY and STAGE=prod.
 - Create an IAM policy "DevAgentsS3JobsPolicy" granting s3:ListBucket, s3:GetObject, and s3:PutObject access to {S3_BUCKET_NAME}/jobs/*.
 - Create an IAM policy "DevAgentsInvokeRunnerPolicy" granting lambda:InvokeFunction on the Lambda runner function.
 - Create an IAM role "DevAgentsBffLambdaRole" with AWSLambdaBasicExecutionRole, DevAgentsS3JobsPolicy, and DevAgentsInvokeRunnerPolicy.

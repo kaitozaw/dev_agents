@@ -15,7 +15,7 @@ def implement_diff(job_id: str, repo_url: str, branch: str) -> Dict[str, Any]:
         raise ValueError("plan.json must include 'candidate' and non-empty 'unused_imports'")
 
     rel_path = candidate.replace(".", "/") + ".py"
-    tmpdir = tempfile.mkdtemp(prefix="dep-analyst-")
+    tmpdir = tempfile.mkdtemp(prefix="implementer-")
     repo_root = Path(tmpdir) / "repo"
     try:
         _shallow_clone(repo_url, branch or "main", repo_root)
